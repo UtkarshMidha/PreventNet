@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.fab
+*.log
+
+# generated at runtime by the local deployments / scripts
+viewer/latest.json

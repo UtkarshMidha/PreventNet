@@ -1,0 +1,25 @@
+{
+  "_about": "Prepared coordinator assessments for Fast Demo Mode. P001 is based on recorded Flower Endeavor runs 6805811181906651753 (normal) and 1567274032615821010 (compromised prescription logs), with simplified wording. P002 and P003 are scripted to match their facts. Fact IDs follow the fixed order: Health Diagnostics L1-L3, Prescription Logs L4-L6, Lab Reports next, risk model last.",
+  "P001": {
+    "normal": {
+      "model": "flower-endeavor-v1.0",
+      "summary": "RISKS\n- Kidney function is moderately reduced and has declined over two years. [L7][L8]\n- A contrast scan is planned while blood pressure is high and kidney function is reduced. [L1][L2][L7]\n- NSAID painkillers are being taken and dispensed, and an interaction alert was raised alongside metformin. [L3][L4][L5][L6]\n- Blood sugar is in the prediabetic range and diabetes risk is moderate. [L9][L10]\n\nRECOMMENDATION\nBook a medication and kidney safety review before the contrast scan: re-check kidney function and review NSAID and metformin use. [L2][L3][L5][L7]\n\nCONFIDENCE\nHigh [L1][L7]"
+    },
+    "sabotage": {
+      "model": "flower-endeavor-v1.0",
+      "summary": "RISKS\n- Kidney function is moderately reduced and has declined over two years. [L7][L8]\n- A contrast scan is planned while kidney function is reduced. [L2][L7]\n- The patient reports taking NSAID painkillers, but no NSAID dispense or interaction alert is on record. [L3][L4][L6]\n- Blood sugar is in the prediabetic range and diabetes risk is moderate. [L9][L10]\n\nRECOMMENDATION\nReview kidney safety and NSAID use before the contrast scan. [L2][L3][L7]\n\nCONFIDENCE\nMedium [L3][L4]"
+    }
+  },
+  "P002": {
+    "normal": {
+      "model": "flower-endeavor-v1.0",
+      "summary": "RISKS\nNo kidney or medication safety concerns in the shared records. [L1][L4][L5]\n- Diabetes risk is moderate, close to the high band. [L7]\n\nRECOMMENDATION\nOffer a diabetes prevention check: an HbA1c test and lifestyle advice. [L7]\n\nCONFIDENCE\nMedium [L7]"
+    }
+  },
+  "P003": {
+    "normal": {
+      "model": "flower-endeavor-v1.0",
+      "summary": "RISKS\nNo kidney, medication or diabetes concerns in the shared records. [L1][L4][L7]\n\nRECOMMENDATION\nNo preventive action needed now; continue routine care. [L7]\n\nCONFIDENCE\nHigh [L1][L7]"
+    }
+  }
+}

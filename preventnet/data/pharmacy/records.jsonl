@@ -1,0 +1,10 @@
+{"patient_id": "P001", "kind": "dispense", "date": "2026-01-10", "drug": "metformin", "dose_mg": 500}
+{"patient_id": "P001", "kind": "dispense", "date": "2026-02-10", "drug": "metformin", "dose_mg": 500}
+{"patient_id": "P001", "kind": "dispense", "date": "2026-03-10", "drug": "metformin", "dose_mg": 500}
+{"patient_id": "P001", "kind": "dispense", "date": "2026-04-10", "drug": "metformin", "dose_mg": 500}
+{"patient_id": "P001", "kind": "dispense", "date": "2026-06-04", "drug": "ibuprofen", "dose_mg": 400}
+{"patient_id": "P001", "kind": "interaction_flag", "date": "2026-06-04", "flag": "nsaid_metformin_caution", "triggered": true}
+{"patient_id": "P001", "kind": "dispense", "date": "2026-03-22", "drug": "vitamin_d", "dose_mg": 1000}
+{"patient_id": "P001", "kind": "dispense", "date": "2026-05-18", "drug": "cetirizine", "dose_mg": 10}
+{"patient_id": "P002", "kind": "dispense", "date": "2026-02-11", "drug": "vitamin_d", "dose_mg": 1000}
+{"patient_id": "P003", "kind": "dispense", "date": "2026-03-05", "drug": "cetirizine", "dose_mg": 10}

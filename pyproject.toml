@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "preventnet"
+version = "0.1.1"
+description = "Federated preventive-risk review: agents share judgements, never records."
+license = { file = "LICENSE" }
+requires-python = ">=3.11,<3.14"
+dependencies = ["flwr>=1.37.0,<2.0", "openai>=2.16.0,<3.0.0", "numpy>=2.0"]
+
+[dependency-groups]
+dev = ["pytest>=8.0.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["preventnet"]
+
+[tool.flwr.app]
+publisher = "utkarsh"
+fab-format-version = 1
+flwr-version-target = "1.37.0"
+fab-include = ["preventnet/**/*.py", "preventnet/data/*/*.jsonl", "LICENSE", "README.md"]
+
+[tool.flwr.app.config.agent]
+input = "Run a preventive review for patient P001."
+
+[tool.flwr.app.config.patient]
+id = "P001"
+
+[tool.flwr.app.config.demo]
+sabotage = false
+fast = true   # demo speed: departments answer with rules, 1 Endeavor call (fallback after model.budget_s), code-written verifier note
+
+[tool.flwr.app.config.fl]
+rounds = 30   # vertical federated training rounds across the three departments (1-200); converges by ~15
+lr = 0.5
+
+[tool.flwr.app.config.review]
+ledger = ""  # set by local/dashboard.py: JSON wire items from the local site deployments
+
+[tool.flwr.app.config.model]
+ref = "flower-endeavor-v1.0"
+fallback = "openai/gpt-5.6-sol"
+budget_s = 12  # fast mode: if Endeavor hasn't finished by then, switch to the fallback model
+
+[tool.flwr.app.components]
+agentapp = "preventnet.agent_app:app"

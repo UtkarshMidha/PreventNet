@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PreventNet Source</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="ui.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%235b4ee6%27/%3E%3Cpath d=%27M16 7l2.2 6.3L24.5 15l-6.3 2.2L16 23.5l-2.2-6.3L7.5 15l6.3-1.7z%27 fill=%27white%27/%3E%3C/svg%3E">
+<style>
+  .brand-tile.dept-gp { background: var(--gp); box-shadow: 0 4px 12px rgba(91,78,230,.3); }
+  .brand-tile.dept-pharmacy { background: var(--pharmacy); box-shadow: 0 4px 12px rgba(232,119,46,.3); }
+  .brand-tile.dept-lab { background: var(--lab); box-shadow: 0 4px 12px rgba(19,154,143,.3); }
+  .hero.dept-pharmacy { background: radial-gradient(120% 140% at 0% 0%, #6b3a1a 0%, transparent 55%), linear-gradient(120deg, #2a1608, #5a2e12); }
+  .hero.dept-lab { background: radial-gradient(120% 140% at 0% 0%, #13534d 0%, transparent 55%), linear-gradient(120deg, #06231f, #0f4a43); }
+  .hero.dept-pharmacy .orb { background: radial-gradient(circle at 35% 30%, #ffc79c, #e8772e 55%, #b9551a); box-shadow: 0 0 0 10px rgba(255,255,255,.06), 0 0 40px rgba(255,150,80,.45); }
+  .hero.dept-lab .orb { background: radial-gradient(circle at 35% 30%, #9cefe3, #139a8f 55%, #0b6f67); box-shadow: 0 0 0 10px rgba(255,255,255,.06), 0 0 40px rgba(40,200,180,.4); }
+  .hero.compromised { background: linear-gradient(120deg, #3b0d0c, #7a1c19); }
+  .weight { display: grid; grid-template-columns: minmax(120px, 1fr) 2fr 56px; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .weight:last-child { border-bottom: 0; }
+  .wbar { position: relative; height: 8px; background: #f1f1f5; border-radius: 999px; }
+  .wbar::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--line-2); }
+  .wbar i { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
+  .note-text { background: #f8f8fc; border-left: 3px solid var(--line-2); border-radius: 0 10px 10px 0; padding: 8px 12px; margin-top: 6px; color: var(--ink-2); }
+  .demo { border: 1px dashed var(--bad); background: #fffafa; }
+</style>
+</head>
+<body>
+<div class="frame">
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-tile" id="brandTile"></div>
+      <div><div class="brand-name" id="brandName">Source</div><div class="brand-sub">PreventNet Data Source</div></div>
+    </div>
+    <div class="context"><span data-icon="lock"></span><div><div style="font-weight:500">Private Server</div><div class="small faint">Raw Data Never Leaves</div></div></div>
+    <nav class="nav" aria-label="Source">
+      <div class="eyebrow">Source</div>
+      <a href="#overview" data-view="overview"><span data-icon="grid"></span>Overview</a>
+      <a href="#records" data-view="records"><span data-icon="file"></span>Patient Records<span class="count" id="navRecords"></span></a>
+      <a href="#shared" data-view="shared"><span data-icon="shield"></span>Shared &amp; Declined<span class="count" id="navShared"></span></a>
+      <a href="#cohort" data-view="cohort"><span data-icon="database"></span>Cohort Data</a>
+    </nav>
+    <div class="grow"></div>
+    <div class="usercard">
+      <div class="who"><div class="avatar" id="deptAvatar"></div><div><div style="font-weight:600">Data Steward</div><div class="small faint">Answers Only Short Questions</div></div></div>
+      <p class="small muted">The coordinator can only ask short, approved questions. It never sees this page.</p>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="title"><h1 id="title">Source</h1><p id="subline">Everything on this page stays on this server.</p></div>
+      <span class="pill ok" id="statusPill"><span class="dot"></span><span id="statusText">Private · Local Only</span></span>
+    </header>
+
+    <div class="content">
+      <section class="view" id="view-overview">
+        <div class="hero" id="hero">
+          <div class="orb" id="orb"></div>
+          <div class="body">
+            <div class="live"><span class="tag" id="heroTag"><span class="dot"></span><span id="heroTagText">AGENT · LOCAL</span></span>
+              <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+            <div class="headline" id="heroHeadline"></div>
+            <div class="chips" id="heroChips"></div>
+          </div>
+          <div class="glass-row">
+            <div class="glass"><div class="k"><span data-icon="shield"></span>Facts Shared</div><div class="v" id="gShared">0</div><div class="s">short answers only</div></div>
+            <div class="glass"><div class="k"><span data-icon="lock"></span>Declined</div><div class="v" id="gDeclined">0</div><div class="s">outside the purpose</div></div>
+            <div class="glass"><div class="k"><span data-icon="users"></span>Patients</div><div class="v" id="gPatients">0</div><div class="s">with records here</div></div>
+          </div>
+        </div>
+
+        <div class="card demo" id="demoCard" hidden style="margin-top:20px">
+          <div class="card-head" style="margin-bottom:10px"><div><h2>Demo: Compromise This Source</h2>
+            <p>When on, the answers about painkillers and interaction alerts are secretly flipped to “No”. The coordinator's checks should catch it.</p></div></div>
+          <label class="switch"><input type="checkbox" id="sabotage"><span id="sabotageLabel">Compromise Prescription Logs</span></label>
+        </div>
+
+        <div class="grid-2" style="margin-top:20px">
+          <div class="card"><div class="card-head"><div><h2>Recent Activity</h2><p>What this source told the coordinator</p></div><a class="btn" href="#shared">View All</a></div>
+            <div class="feed" id="recentFeed"></div></div>
+          <div class="card"><div class="card-head"><div><h2>Records At A Glance</h2><p>What this source holds</p></div><a class="btn" href="#records">View Records</a></div>
+            <div class="rows" id="kindRows"></div></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-records" hidden>
+        <div class="card">
+          <div class="card-head"><div><h2>Patient Records</h2><p>Raw records. Only visible here.</p></div><div class="seg" id="patientSeg"></div></div>
+          <div class="feed" id="recordFeed"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-shared" hidden>
+        <div class="card">
+          <div class="card-head"><div><h2>Shared &amp; Declined</h2><p>Every answer this source sent, and every question it refused</p></div></div>
+          <div class="feed" id="sharedFeed"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-cohort" hidden>
+        <div class="card">
+          <div class="card-head"><div><h2>Cohort Data</h2><p id="cohortSub"></p></div></div>
+          <div class="grid-3" id="cohortCols"></div>
+          <details style="margin-top:16px"><summary>Preview First Rows</summary><div class="tbl"><table id="cohortTable"></table></div></details>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="icons.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const DEPT_ICON = { gp: "gp", pharmacy: "pharmacy", lab: "lab" };
+const KIND = {
+  diagnosis: ["gp", "Diagnosis"], family_history: ["users", "Family history"], visit_note: ["file", "Visit note"],
+  referral: ["arrow", "Referral"], dispense: ["pharmacy", "Dispensed"], interaction_flag: ["alert", "Interaction alert"],
+  lab_result: ["lab", "Lab result"],
+};
+const KIND_NAME = {
+  diagnosis: "Diagnoses", family_history: "Family History", visit_note: "Visit Notes", referral: "Referrals",
+  dispense: "Dispensed Medicines", interaction_flag: "Interaction Alerts", lab_result: "Lab Results",
+};
+const WORDS = {
+  metformin: "Metformin", ibuprofen: "Ibuprofen", vitamin_d: "Vitamin D", cetirizine: "Cetirizine", asthma: "Asthma",
+  contrast_ct: "Contrast CT scan", nsaid_metformin_caution: "NSAID taken with metformin", mother: "Mother",
+  egfr: "Kidney function (eGFR)", hba1c: "Blood sugar (HbA1c)", cbc: "Full blood count", lipid_panel: "Cholesterol panel",
+  within_normal_limits: "Within normal limits",
+};
+let D = null, patient = null;
+const word = v => WORDS[v] || (D?.labels?.values?.[v]) || humanize(v);
+const L = (kind, key) => (D?.labels?.[kind]?.[key]) || humanize(key);
+const date = iso => new Date(iso).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
+const time = iso => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+function route() {
+  const v = (location.hash || "#overview").slice(1);
+  document.querySelectorAll(".view").forEach(s => s.hidden = s.id !== "view-" + v);
+  document.querySelectorAll(".nav a").forEach(a => a.classList.toggle("active", a.dataset.view === v));
+}
+window.addEventListener("hashchange", route);
+
+function describe(r) {
+  switch (r.kind) {
+    case "diagnosis": return [`Diagnosis: ${word(r.condition)}`, r.note];
+    case "family_history": return [`Family history: ${word(r.condition)} (${word(r.relative).toLowerCase()})`, null];
+    case "visit_note": return ["Visit note", r.note];
+    case "referral": return [`Referral: ${word(r.referral_type)}`, r.scheduled_date ? `Scheduled for ${date(r.scheduled_date)}` : null];
+    case "dispense": return [`Dispensed: ${word(r.drug)} ${r.dose_mg} mg`, null];
+    case "interaction_flag": return [`Interaction alert: ${word(r.flag)}`, r.triggered ? "Alert was triggered at dispensing" : null];
+    case "lab_result":
+      if (r.test === "egfr") return [`${word("egfr")}: ${word(r.egfr_band)}`, null];
+      if (r.test === "hba1c") return [`${word("hba1c")}: ${r.value_pct}% (${word(r.hba1c_band)})`, null];
+      return [`${word(r.test)}: ${word(r.result)}`, null];
+    default: return [humanize(r.kind), null];
+  }
+}
+
+function auditItem(a) {
+  if (a.disclosed) {
+    const v = a.value === true ? "Yes" : a.value === false ? "No" : L("values", a.value);
+    return `<div class="item"><div class="tile ${a.sabotaged ? "bad" : "ok"}">${icon(a.sabotaged ? "alert" : "shield")}</div>
+      <div class="text">Shared <b>${esc(L("fields", a.disclosed))}</b>: ${esc(v)} ${a.sabotaged ? '<span class="chip bad">Tampered (demo)</span>' : ""}
+      <div class="meta">${icon("sparkles")}${esc(L("purposes", a.purpose))} · ${esc(a.patient_id)} · ${time(a.at)}</div></div></div>`;
+  }
+  if (a.refused) {
+    return `<div class="item"><div class="tile">${icon("lock")}</div><div class="text">Declined <b>${esc(L("questions", a.refused))}</b>
+      <div class="meta">${icon("sparkles")}${esc(L("reasons", a.reason))} · ${esc(a.patient_id)} · ${time(a.at)}</div></div></div>`;
+  }
+  const on = /ON/.test(a.admin);
+  return `<div class="item"><div class="tile ${on ? "bad" : ""}">${icon("alert")}</div><div class="text"><b>Demo:</b> agent compromise turned ${on ? "on" : "off"}
+    <div class="meta">${icon("clock")}${time(a.at)}</div></div></div>`;
+}
+const emptyFeed = text => `<div class="empty">${icon("shield")}<b>Nothing Shared Yet</b><span>${text}</span></div>`;
+const EMPTY_HINT = "Answers appear here when the coordinator reviews a patient.";
+
+function render() {
+  const role = D.role, name = D.role_label;
+  document.title = `${name} · PreventNet`;
+  $("brandTile").className = `brand-tile dept-${role}`;
+  $("brandTile").innerHTML = icon(DEPT_ICON[role]);
+  $("brandName").textContent = name;
+  $("deptAvatar").innerHTML = icon(DEPT_ICON[role]);
+  $("title").textContent = name;
+  $("orb").innerHTML = icon(DEPT_ICON[role]);
+
+  const shared = D.audit.filter(a => a.disclosed), declined = D.audit.filter(a => a.refused);
+  const patients = [...new Set(D.records.map(r => r.patient_id))];
+  $("navRecords").textContent = D.records.length;
+  $("navShared").textContent = shared.length + declined.length;
+  $("statusPill").className = "pill " + (D.sabotage ? "bad" : "ok");
+  $("statusText").textContent = D.sabotage ? "Compromised (Demo)" : "Private · Local Only";
+  $("subline").innerHTML = `${D.records.length} patient records live here. <b>None of them leave this server.</b>`;
+
+  const hero = $("hero");
+  hero.className = `hero dept-${role}` + (D.sabotage ? " compromised" : "");
+  $("heroTag").className = "tag" + (D.sabotage ? " wait" : "");
+  $("heroTagText").textContent = `${name.toUpperCase()} · ${D.sabotage ? "COMPROMISED" : "PRIVATE SOURCE"}`;
+  $("heroHeadline").textContent = D.sabotage ? "This source is compromised for the demo: its safety answers are being flipped"
+    : shared.length ? `Shared ${shared.length} short answer${shared.length === 1 ? "" : "s"} and declined ${declined.length}. No record left this server.`
+    : "Waiting for questions from the coordinator";
+  $("heroChips").innerHTML = [`${patients.length} patients`, `${D.records.length} records`,
+    "Records Stay Here"]
+    .map(c => `<span>${esc(c)}</span>`).join("");
+  $("gShared").textContent = shared.length;
+  $("gDeclined").textContent = declined.length;
+  $("gPatients").textContent = patients.length;
+
+  $("demoCard").hidden = role !== "pharmacy";
+  $("sabotage").checked = D.sabotage;
+  $("sabotageLabel").textContent = D.sabotage ? "Compromised (Demo)" : "Compromise Prescription Logs";
+
+  $("recentFeed").innerHTML = D.audit.length ? D.audit.slice(0, 5).map(auditItem).join("") : emptyFeed(EMPTY_HINT);
+  $("sharedFeed").innerHTML = D.audit.length ? D.audit.map(auditItem).join("") : emptyFeed(EMPTY_HINT);
+
+  const kinds = {};
+  D.records.forEach(r => { kinds[r.kind] = (kinds[r.kind] || 0) + 1; });
+  $("kindRows").innerHTML = Object.entries(kinds).map(([k, n]) =>
+    `<div class="r"><span style="display:flex;gap:10px;align-items:center"><span class="tile">${icon((KIND[k] || ["file"])[0])}</span>${esc(KIND_NAME[k] || humanize(k))}</span><b class="num">${n}</b></div>`).join("");
+
+  if (!patient || !patients.includes(patient)) patient = patients[0];
+  $("patientSeg").innerHTML = patients.map(p => `<button type="button" data-p="${esc(p)}" class="${p === patient ? "on" : ""}">${esc(p)}</button>`).join("");
+  $("recordFeed").innerHTML = D.records.filter(r => r.patient_id === patient).sort((a, b) => b.date.localeCompare(a.date)).map(r => {
+    const [ic] = KIND[r.kind] || ["file"];
+    const [title, detail] = describe(r);
+    const isNote = r.kind === "visit_note" || (r.kind === "diagnosis" && r.note);
+    return `<div class="item"><div class="tile">${icon(ic)}</div><div class="text"><b>${esc(title)}</b>
+      ${detail ? (isNote ? `<div class="note-text">${esc(detail)}</div>` : `<div class="small muted">${esc(detail)}</div>`) : ""}
+      <div class="meta">${icon("clock")}${date(r.date)}</div></div></div>`;
+  }).join("");
+
+  const s = D.cohort.summary;
+  $("cohortSub").textContent = `Public Pima Indians Diabetes data: ${s.splits.train} training rows, ${s.splits.test} test rows, plus ${s.splits.review} patients under review.`;
+  $("cohortCols").innerHTML = s.columns.map(c => `<div class="card kpi"><div class="top"><span class="icircle">${icon("pulse")}</span>${esc(c.label)}</div>
+      <div class="value">${c.mean}</div><div class="small muted">${esc(c.description)} · average</div>
+      <div class="bar-row small"><span>Range</span><span class="num">${c.min}–${c.max}</span></div>
+      ${c.missing_recorded_as_0 ? `<div class="small faint">${c.missing_recorded_as_0} not measured</div>` : ""}</div>`).join("")
+    + (s.label ? `<div class="card kpi"><div class="top"><span class="icircle">${icon("badge")}</span>${esc(s.label.name)}</div>
+      <div class="value">${(s.label.prevalence * 100).toFixed(1)}%</div><div class="small muted">${s.label.positives} of ${s.rows} people. Only this department holds it.</div>
+      <div class="bar"><i style="width:${s.label.prevalence * 100}%"></i></div></div>` : "");
+  const colLabel = c => c === "entity_id" ? "Person" : c === "split" ? "Used for" : (s.columns.find(x => x.column === c)?.label || s.label?.name || humanize(c));
+  $("cohortTable").innerHTML = `<tr>${D.cohort.columns.map(c => `<th>${esc(colLabel(c))}</th>`).join("")}</tr>` +
+    D.cohort.preview.map(row => `<tr>${row.map(v => `<td class="num">${esc(v === "train" ? "Training" : v === "test" ? "Testing" : v)}</td>`).join("")}</tr>`).join("");
+}
+
+$("patientSeg").addEventListener("click", e => { if (e.target.dataset.p) { patient = e.target.dataset.p; render(); } });
+$("sabotage").addEventListener("change", async e => {
+  await fetch("admin/sabotage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ on: e.target.checked }) });
+  refresh();
+});
+
+async function refresh() {
+  try {
+    D = await (await fetch("api/overview", { cache: "no-store" })).json();
+    render();
+  } catch (e) {
+    $("statusPill").className = "pill bad"; $("statusText").textContent = "Server unreachable";
+  }
+}
+fillIcons(); route(); refresh();
+setInterval(refresh, 4000);
+</script>
+</body>
+</html>

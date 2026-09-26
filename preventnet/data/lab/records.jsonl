@@ -1,0 +1,8 @@
+{"patient_id": "P001", "kind": "lab_result", "date": "2024-06-01", "test": "egfr", "egfr_band": "normal"}
+{"patient_id": "P001", "kind": "lab_result", "date": "2025-06-01", "test": "egfr", "egfr_band": "mildly_reduced"}
+{"patient_id": "P001", "kind": "lab_result", "date": "2026-06-01", "test": "egfr", "egfr_band": "moderately_reduced"}
+{"patient_id": "P001", "kind": "lab_result", "date": "2025-12-01", "test": "hba1c", "value_pct": 5.9, "hba1c_band": "prediabetic"}
+{"patient_id": "P001", "kind": "lab_result", "date": "2026-06-01", "test": "hba1c", "value_pct": 5.9, "hba1c_band": "prediabetic"}
+{"patient_id": "P001", "kind": "lab_result", "date": "2026-06-01", "test": "cbc", "result": "within_normal_limits"}
+{"patient_id": "P002", "kind": "lab_result", "date": "2026-01-20", "test": "lipid_panel", "result": "within_normal_limits"}
+{"patient_id": "P003", "kind": "lab_result", "date": "2026-02-14", "test": "cbc", "result": "within_normal_limits"}

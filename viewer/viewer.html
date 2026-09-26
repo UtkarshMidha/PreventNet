@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PreventNet Review</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%235b4ee6%27/%3E%3Cpath d=%27M16 7l2.2 6.3L24.5 15l-6.3 2.2L16 23.5l-2.2-6.3L7.5 15l6.3-1.7z%27 fill=%27white%27/%3E%3C/svg%3E">
+<style>
+  :root {
+    --canvas: #f2f2f6; --card: #fff; --line: #ebebf1; --line-2: #dfdfe8; --ink: #15151c; --ink-2: #5d5d6c; --ink-3: #9898a7;
+    --accent: #5b4ee6; --accent-2: #7d72f6; --accent-soft: #efedfe;
+    --ok: #178f60; --ok-soft: #e4f5ed; --warn: #b87404; --warn-soft: #fdf1dc; --bad: #d64541; --bad-soft: #fcebea;
+    --gp: #5b4ee6; --pharmacy: #e8772e; --lab: #139a8f; --fed: #9b5de5;
+    --shadow: 0 1px 2px rgba(20,20,40,.04), 0 4px 16px rgba(20,20,40,.04);
+    --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font: 14px/1.55 var(--font); -webkit-font-smoothing: antialiased; padding-block: 24px 48px; padding-inline: max(16px, 4vw); }
+  body.embed { background: transparent; padding: 0; }
+  h1, h2, h3, p { margin: 0; } h1 { font-size: 20px; font-weight: 600; } h2 { font-size: 16px; font-weight: 600; } h3 { font-size: 13px; font-weight: 600; }
+  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 20px; }
+  body.embed .wrap { max-width: none; }
+  .muted { color: var(--ink-2); } .faint { color: var(--ink-3); } .small { font-size: 12.5px; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  svg.i { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); min-width: 0; animation: rise .45s ease-out both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .head { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .who { display: flex; gap: 12px; align-items: center; }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; color: var(--accent); background: var(--accent-soft); flex: none; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 500; white-space: nowrap; background: #f1f1f5; color: var(--ink-2); }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); } .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip.bad { background: var(--bad-soft); color: var(--bad); } .chip.info { background: var(--accent-soft); color: var(--accent); }
+  .chip.big { padding: 6px 14px; font-size: 13px; }
+  .chip svg.i { width: 14px; height: 14px; }
+  .depts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .dept { display: flex; gap: 10px; align-items: center; }
+  .tile { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: #fff; flex: none; }
+  .tile.gp { background: var(--gp); } .tile.pharmacy { background: var(--pharmacy); } .tile.lab { background: var(--lab); } .tile.fed { background: var(--fed); }
+  .cols { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 20px; align-items: start; }
+  .side { display: grid; gap: 20px; }
+
+  /* coordinator agent */
+  .agent { display: grid; gap: 14px; }
+  .agent-head { display: flex; align-items: center; gap: 12px; }
+  .orb { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fff; flex: none; background: radial-gradient(circle at 35% 30%, #b3a8ff, #6a55f0 55%, #4b36d4); box-shadow: 0 0 16px rgba(120,100,255,.35); }
+  .orb svg.i { width: 18px; height: 18px; }
+  .bubble { background: #f8f8fc; border: 1px solid var(--line); border-radius: 4px 16px 16px 16px; padding: 16px 18px; display: grid; gap: 12px; }
+  .risks { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+  .risk { display: flex; gap: 10px; align-items: flex-start; animation: rise .4s ease-out both; }
+  .risk .mark { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: var(--warn-soft); color: var(--warn); flex: none; margin-top: 1px; }
+  .risk .mark svg.i { width: 13px; height: 13px; }
+  .risk.struck .mark { background: var(--bad-soft); color: var(--bad); }
+  .risk.struck .txt { text-decoration: line-through; color: var(--ink-3); }
+  .srcs { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 3px; }
+  .src { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink-3); }
+  .src i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .rec { background: var(--accent-soft); border-radius: 12px; padding: 12px 14px; display: grid; gap: 4px; }
+  .rec.withheld { background: #f1f1f5; }
+  .rec.withheld .body { text-decoration: line-through; color: var(--ink-3); }
+
+  /* decision */
+  .decide { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .dcard { display: grid; gap: 6px; text-align: left; border: 1px solid var(--line-2); border-radius: 14px; padding: 14px; background: var(--card); font: inherit; color: inherit; cursor: pointer; transition: border-color .2s, box-shadow .2s, transform .2s, opacity .2s; }
+  .dcard:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .dcard .dic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; }
+  .dcard.approve .dic { background: var(--ok-soft); color: var(--ok); }
+  .dcard.approve:hover:not(:disabled) { border-color: var(--ok); }
+  .dcard.decline .dic { background: #f1f1f5; color: var(--ink-2); }
+  .dcard.decline:hover:not(:disabled) { border-color: var(--ink-3); }
+  .dcard:disabled { cursor: not-allowed; opacity: .45; }
+  .dcard.chosen { opacity: 1; border-color: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+  .dcard.decline.chosen { border-color: var(--ink-2); box-shadow: 0 0 0 3px #efeff4; }
+  .risk-meter { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #d9f1e6 0 15%, #fdf1dc 15% 40%, #fcebea 40% 100%); position: relative; margin: 14px 0 6px; }
+  .risk-meter i { position: absolute; top: -4px; width: 4px; height: 16px; border-radius: 2px; background: var(--ink); transition: left .8s ease; }
+  .scale { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-3); }
+
+  /* what the coordinator saw */
+  .saw { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 16px; }
+  .src-card { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--card); display: flex; flex-direction: column; animation: rise .45s ease-out both; }
+  .src-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .src-head .tile { width: 30px; height: 30px; border-radius: 9px; } .src-head .tile svg.i { width: 16px; height: 16px; }
+  .src-head h3 { flex: 1; font-size: 14px; }
+  .src-head .count { font-size: 12px; color: var(--ink-3); }
+  .src-card.gp .src-head { background: #f3f2fe; } .src-card.pharmacy .src-head { background: #fdf3ec; }
+  .src-card.lab .src-head { background: #eaf6f5; }
+  .src-rows { padding: 2px 14px 6px; display: grid; }
+  .frow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .frow:last-child { border-bottom: 0; }
+  .frow .lbl { font-size: 13px; color: var(--ink-2); line-height: 1.35; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 10px; font-size: 12.5px; font-weight: 600; white-space: nowrap; background: #f1f1f5; color: var(--ink-2); }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.info { background: var(--accent-soft); color: var(--accent); } .pill.no { color: var(--ink-3); }
+  .declined-row { margin-top: auto; display: flex; gap: 8px; align-items: center; padding: 10px 14px; border-top: 1px dashed var(--line-2); background: #fafafc; font-size: 12.5px; color: var(--ink-3); }
+  .declined-row svg.i { width: 14px; height: 14px; }
+  .model-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: linear-gradient(120deg, #f5efff, #fbf9ff); border: 1px solid #ece3fb; }
+  .model-row .tile { width: 30px; height: 30px; border-radius: 9px; } .model-row .tile svg.i { width: 16px; height: 16px; }
+  .model-row .grow { flex: 1; min-width: 180px; }
+  .private { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ok); background: var(--ok-soft); border-radius: 999px; padding: 4px 10px; font-weight: 500; }
+  .private svg.i { width: 13px; height: 13px; }
+  .alert { border-radius: 14px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; background: var(--warn-soft); color: #6f4600; animation: rise .4s ease-out both; }
+  .alert b { color: #5a3a00; }
+  textarea { width: 100%; border: 1px solid var(--line-2); border-radius: 12px; padding: 10px; font: 12px ui-monospace, monospace; }
+  .loadbtn { margin-top: 12px; border-radius: 999px; padding: 9px 16px; border: 1px solid #15151c; background: #15151c; color: #fff; font: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+  @media (max-width: 420px) { .decide { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="loader">
+    <h1>PreventNet Review</h1>
+    <p class="muted" style="margin:6px 0 12px">No review found at <code>latest.json</code>. Paste a <code>PREVENTNET_RESULT</code> payload to view it.</p>
+    <textarea id="pasteArea" rows="7" aria-label="Review payload"></textarea>
+    <button class="loadbtn" id="loadBtn">Show Review</button>
+  </div>
+
+  <div id="content" hidden style="display:grid;gap:20px">
+    <div class="card">
+      <div class="head">
+        <div class="who"><div class="avatar" id="avatar"></div>
+          <div><h1 id="patientId"></h1><p class="small muted" id="runInfo"></p></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="statusChips"></div>
+      </div>
+      <div class="depts" id="depts"></div>
+    </div>
+
+    <div id="conflicts" style="display:grid;gap:12px"></div>
+
+    <div class="cols">
+      <div class="card agent">
+        <div class="agent-head"><div class="orb" id="orb"></div>
+          <div style="flex:1"><h2>Coordinator Agent</h2><p class="small faint" id="agentModel"></p></div>
+          <span class="chip" id="confidence"></span></div>
+        <div class="bubble" id="agentBubble"></div>
+      </div>
+      <div class="side">
+        <div class="card">
+          <div class="head"><h2>Your Decision</h2><span class="chip" id="decisionChip"></span></div>
+          <div class="decide">
+            <button class="dcard approve" id="approveBtn"><span class="dic" id="approveIcon"></span><b>Approve</b><span class="small muted" id="approveText">Send this recommendation to the care team.</span></button>
+            <button class="dcard decline" id="declineBtn"><span class="dic" id="declineIcon"></span><b>Decline</b><span class="small muted" id="declineText">Don't act on this recommendation.</span></button>
+          </div>
+        </div>
+        <div class="card" id="riskCard" hidden>
+          <div class="head"><h2>Diabetes Risk</h2><span class="chip info" id="riskBand"></span></div>
+          <div class="risk-meter"><i id="riskMark" style="left:0"></i></div>
+          <div class="scale"><span>Low</span><span>Moderate</span><span>High</span></div>
+          <p class="small muted" style="margin-top:10px" id="riskText"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head"><div><h2>What The Coordinator Saw</h2><p class="small muted" id="sawSub"></p></div>
+        <span class="private" id="privateTag"></span></div>
+      <div class="saw" id="facts"></div>
+      <div id="modelRow"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ICONS = {
+  sparkles: '<path d="M10 3.5 11.6 8l4.4 1.5-4.4 1.6L10 15.5l-1.6-4.4L4 9.5 8.4 8z"/><path d="M18 14l.8 2.2 2.2.8-2.2.8L18 20l-.8-2.2-2.2-.8 2.2-.8z"/>',
+  lock: '<rect x="4.5" y="11" width="15" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>',
+  alert: '<path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.2h.01"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  gp: '<path d="M5.5 3.5v5a4.5 4.5 0 0 0 9 0v-5"/><path d="M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/>',
+  pharmacy: '<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>',
+  lab: '<path d="M9 3h6"/><path d="M10 3v6.5L4.6 18.4A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.4-2.6L14 9.5V3"/><path d="M7.2 15h9.6"/>',
+  fed: '<circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 7.5v4M12 11.5 6.8 17M12 11.5l5.2 5.5"/>',
+};
+const icon = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
+const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const humanize = s => { const t = String(s ?? "").replace(/[_-]+/g, " ").trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
+const $ = id => document.getElementById(id);
+const EMBED = new URLSearchParams(location.search).has("embed");
+if (EMBED) document.body.classList.add("embed");
+
+const GROUPS = [["gp", "Health Diagnostics", "gp"], ["pharmacy", "Prescription Logs", "pharmacy"], ["lab", "Lab Reports", "lab"], ["federated-model", "Risk Model", "fed"]];
+const COLORS = { gp: "var(--gp)", pharmacy: "var(--pharmacy)", lab: "var(--lab)", "federated-model": "var(--fed)" };
+const VERDICT = {
+  APPROVED_FOR_REVIEW: ["ok", "Ready For Your Decision"],
+  ESCALATE_CONFLICT: ["warn", "Sources Disagree"],
+  BLOCKED_UNVERIFIED: ["bad", "Needs Checking"],
+};
+const CONCERN = new Set(["mildly_reduced", "moderately_reduced", "severely_reduced", "declining", "prediabetic", "diabetic", "moderate", "high", "hypertension", "type2_diabetes"]);
+const REASSURING = new Set(["normal", "stable", "improving", "low", "none_relevant"]);
+const CITE_RE = /\s*\[(?:L\d+[,\s]*)+\]/g;
+
+let D, LB;
+const L = (kind, key) => (LB[kind] && LB[kind][key]) || humanize(key);
+const hhmm = iso => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+function valueText(v) {
+  if (v === true) return ["info", "Yes"];
+  if (v === false) return ["no", "No"];
+  return [CONCERN.has(v) ? "warn" : REASSURING.has(v) ? "ok" : "", L("values", v)];
+}
+
+function sectionOf(line) {
+  const t = line.replace(/^[#\s]+/, "").replace(/\*/g, "").replace(/:\s*$/, "").trim().toUpperCase();
+  return ["RISKS", "RECOMMENDATION", "CONFIDENCE"].includes(t) ? t : null;
+}
+
+function parseSummary(md) {
+  const out = { RISKS: [], RECOMMENDATION: [], CONFIDENCE: [], other: [] };
+  let cur = "other";
+  for (const raw of (md || "").split("\n")) {
+    const line = raw.trim();
+    if (!line) continue;
+    const sec = sectionOf(line);
+    if (sec) { cur = sec; continue; }
+    const struck = /^~~.*~~$/.test(line);
+    const body = struck ? line.slice(2, -2) : line;
+    const bullet = /^([-*]|\d+\.)\s+/.test(body);
+    out[cur].push({ text: body.replace(/^([-*]|\d+\.)\s+/, ""), struck, bullet });
+  }
+  return out;
+}
+
+// Plain text, plus the sources its cited facts came from (instead of fact IDs).
+function clean(text) {
+  const byId = Object.fromEntries((D.ledger || []).map(i => [i.id, i]));
+  const roles = new Set();
+  for (const m of text.matchAll(/L\d+/g)) if (byId[m[0]]) roles.add(byId[m[0]].source);
+  const html = esc(text.replace(CITE_RE, "")).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  const tags = GROUPS.filter(([r]) => roles.has(r)).map(([r, n]) => `<span class="src"><i style="background:${COLORS[r]}"></i>${n}</span>`).join("");
+  return { html, tags: tags ? `<div class="srcs">${tags}</div>` : "" };
+}
+
+function renderAgent() {
+  const s = parseSummary(D.risk_summary_md);
+  $("orb").innerHTML = icon("sparkles");
+  const model = D.engine === "local" ? "Offline rules" : /endeavor/i.test(D.model_used || "") ? "Flower Endeavor" : D.model_used;
+  $("agentModel").textContent = model;
+  const conf = s.CONFIDENCE.map(x => x.text).join(" ");
+  const level = (conf.match(/high|medium|low/i) || [""])[0].toLowerCase();
+  $("confidence").className = "chip " + ({ high: "ok", medium: "warn", low: "" }[level] || "");
+  $("confidence").textContent = level ? `${humanize(level)} Confidence` : "Confidence Not Stated";
+
+  const sources = new Set((D.ledger || []).map(i => i.source).filter(r => r !== "federated-model")).size;
+  const withModel = (D.ledger || []).some(i => i.source === "federated-model");
+  const bullets = s.RISKS.filter(r => r.bullet);
+  const notes = s.RISKS.filter(r => !r.bullet).concat(s.other);
+  const risks = bullets.map((r, i) => {
+    const c = clean(r.text);
+    return `<li class="risk ${r.struck ? "struck" : ""}" style="animation-delay:${0.08 * i}s">
+      <span class="mark">${icon(r.struck ? "x" : "alert")}</span>
+      <div><span class="txt">${c.html}</span>${r.struck ? `<div class="small" style="color:var(--bad)">Not supported by the shared facts.</div>` : c.tags}</div></li>`;
+  }).join("");
+  const withheld = D.verdict !== "APPROVED_FOR_REVIEW";
+  const rec = clean(s.RECOMMENDATION.map(r => r.text).join(" "));
+  $("agentBubble").innerHTML = `<p>I looked at <b>${(D.ledger || []).length} facts</b> from ${sources} sources${withModel ? " and the risk model" : ""}.${bullets.length ? " Here's what stands out:" : ""}</p>
+    ${notes.map(n => `<p class="muted">${clean(n.text).html}</p>`).join("")}
+    ${risks ? `<ul class="risks">${risks}</ul>` : ""}
+    ${rec.html ? `<div class="rec ${withheld ? "withheld" : ""}"><span class="eyebrow">Recommendation${withheld ? " · On Hold" : ""}</span>
+      <div class="body">${rec.html}</div>${withheld ? `<div class="small muted">On hold until the sources agree.</div>` : ""}</div>` : ""}`;
+}
+
+function renderFacts() {
+  const items = D.ledger || [], refusals = D.refusals || [];
+  const sources = new Set(items.map(i => i.source).filter(r => r !== "federated-model")).size;
+  $("sawSub").textContent = `Only ${items.length} short answers, from ${sources} sources and the risk model.`;
+  $("privateTag").innerHTML = `${icon("lock")}Records Stayed Private`;
+  const pill = v => { const [cls, text] = valueText(v); return `<span class="pill ${cls}">${esc(text)}</span>`; };
+  $("facts").innerHTML = GROUPS.slice(0, 3).map(([role, name, ic], n) => {
+    const own = items.filter(i => i.source === role), declined = refusals.filter(r => r.role === role);
+    const rows = own.map(i => `<div class="frow"><span class="lbl">${esc(L("fields", i.field))}</span>${pill(i.value)}</div>`).join("")
+      || `<div class="frow"><span class="lbl">Nothing relevant on record</span></div>`;
+    const dec = declined.map(r => `<div class="declined-row">${icon("lock")}<span><b>${esc(L("questions", r.question_id))}</b> was not shared: outside this review's purpose</span></div>`).join("");
+    return `<div class="src-card ${role}" style="animation-delay:${n * 0.07}s">
+      <div class="src-head"><div class="tile ${ic}">${icon(ic)}</div><h3>${name}</h3><span class="count">${own.length} answer${own.length === 1 ? "" : "s"}</span></div>
+      <div class="src-rows">${rows}</div>${dec}</div>`;
+  }).join("");
+  const model = items.filter(i => i.source === "federated-model");
+  $("modelRow").innerHTML = model.map(i => `<div class="model-row"><div class="tile fed">${icon("fed")}</div>
+    <div class="grow"><b>Risk Model</b><div class="small muted">Trained across all three sources without sharing their data</div></div>
+    <span style="display:inline-flex;gap:8px;align-items:center"><span class="small muted">${esc(L("fields", i.field))}</span>${pill(i.value)}</span></div>`).join("");
+}
+
+function renderHeader() {
+  $("avatar").textContent = D.patient_id.replace(/^P0*/, "P");
+  $("patientId").textContent = "Patient " + D.patient_id;
+  $("runInfo").textContent = D.reviewed_at ? `Reviewed ${new Date(D.reviewed_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}` : "";
+  const [cls, text] = VERDICT[D.verdict] || ["", D.verdict];
+  const decided = D.decision || (D.approval && { action: "approved" });
+  $("statusChips").innerHTML = decided
+    ? `<span class="chip big ${decided.action === "approved" ? "ok" : ""}">${icon(decided.action === "approved" ? "check" : "x")}${decided.action === "approved" ? "Approved" : "Declined"}</span>`
+    : `<span class="chip big ${cls}"><span class="dot"></span>${esc(text)}</span>`;
+  const hacked = new Set(D.sabotaged_roles || (D.sabotage ? ["pharmacy"] : []));
+  $("depts").innerHTML = GROUPS.slice(0, 3).map(([role, name, ic]) => {
+    const n = D.local_views?.[role]?.records_scanned;
+    return `<div class="dept"><div class="tile ${ic}">${icon(ic)}</div><div><b>${name}</b>
+      <div class="small muted">${n ?? "?"} record${n === 1 ? "" : "s"} checked · kept private</div>
+      ${hacked.has(role) ? `<span class="chip bad" style="margin-top:4px">${icon("alert")}Compromised (Demo)</span>` : ""}</div></div>`;
+  }).join("");
+  $("conflicts").innerHTML = (D.conflicts || []).map(c => `<div class="alert">${icon("alert")}<div><b>The Sources Disagree.</b> ${esc(c.description)}
+      Check the records before acting.</div></div>`).join("");
+}
+
+function renderRisk() {
+  const r = D.fl_risk;
+  $("riskCard").hidden = !r;
+  if (!r) return;
+  $("riskBand").textContent = L("values", r.band);
+  requestAnimationFrame(() => { $("riskMark").style.left = `calc(${Math.min(98, r.probability * 100)}% - 2px)`; });
+  $("riskText").textContent = `About ${Math.round(r.probability * 100)}% chance of developing diabetes, estimated by a model the three sources trained together without sharing their data.`;
+}
+
+function renderDecision() {
+  const approve = $("approveBtn"), decline = $("declineBtn"), chip = $("decisionChip");
+  $("approveIcon").innerHTML = icon("check");
+  $("declineIcon").innerHTML = icon("x");
+  const show = d => {
+    const ok = d.action === "approved";
+    approve.disabled = decline.disabled = true;
+    (ok ? approve : decline).classList.add("chosen");
+    (ok ? $("approveText") : $("declineText")).textContent = `${ok ? "Approved" : "Declined"} at ${hhmm(d.decided_at || d.approved_at)}`;
+    chip.className = "chip " + (ok ? "ok" : ""); chip.textContent = ok ? "Approved" : "Declined";
+  };
+  const existing = D.decision || (D.approval && { action: "approved", ...D.approval });
+  if (existing) return show(existing);
+  chip.className = "chip warn"; chip.textContent = "Needs You";
+  if (D.verdict !== "APPROVED_FOR_REVIEW") {
+    approve.disabled = true;
+    $("approveText").textContent = D.verdict === "ESCALATE_CONFLICT" ? "Resolve the disagreement first." : "The assessment could not be checked.";
+  }
+  const decide = async action => {
+    let r;
+    try {
+      r = await fetch(action === "approved" ? "api/approve" : "api/decline", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_id: D.patient_id, clinician: "Doctor" }) });
+    } catch (e) { r = { status: 0 }; }
+    if (r.ok) {
+      const d = await r.json();
+      show({ ...d, action });
+      window.parent.postMessage({ type: "decided" }, "*");
+    } else if ([0, 404, 405, 501].includes(r.status)) {
+      show({ action, decided_at: new Date().toISOString() });  // standalone viewer: nothing to record it
+    } else {
+      alert("Could not save the decision: " + ((await r.json()).error || r.status));
+    }
+  };
+  approve.onclick = () => decide("approved");
+  decline.onclick = () => decide("declined");
+}
+
+function render(data) {
+  D = data; LB = data.labels || {};
+  $("loader").hidden = true;
+  $("content").hidden = false;
+  renderHeader(); renderAgent(); renderDecision(); renderRisk(); renderFacts();
+  postHeight();
+}
+
+function postHeight() { if (EMBED) window.parent.postMessage({ type: "height", h: document.documentElement.scrollHeight }, "*"); }
+new ResizeObserver(postHeight).observe(document.body);
+
+fetch("latest.json", { cache: "no-store" }).then(r => { if (!r.ok) throw new Error("not found"); return r.json(); })
+  .then(render)
+  .catch(() => {
+    $("loadBtn").addEventListener("click", () => {
+      try { render(JSON.parse($("pasteArea").value)); } catch (e) { alert("That isn't a valid review payload: " + e.message); }
+    });
+    postHeight();
+  });
+</script>
+</body>
+</html>

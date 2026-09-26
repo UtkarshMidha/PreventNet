@@ -1,0 +1,9 @@
+{"patient_id": "P001", "kind": "diagnosis", "date": "2019-03-11", "condition": "hypertension", "note": "Routine BP check flagged stage 1 hypertension; started on lifestyle advice."}
+{"patient_id": "P001", "kind": "family_history", "date": "2019-03-11", "relative": "mother", "condition": "type2_diabetes"}
+{"patient_id": "P001", "kind": "visit_note", "date": "2026-05-02", "note": "Patient mentions taking ibuprofen from the pharmacy for knee pain."}
+{"patient_id": "P001", "kind": "referral", "date": "2026-06-14", "referral_type": "contrast_ct", "scheduled_date": "2026-07-05"}
+{"patient_id": "P001", "kind": "visit_note", "date": "2025-11-20", "note": "Annual flu vaccination administered, no concerns raised."}
+{"patient_id": "P001", "kind": "visit_note", "date": "2026-01-15", "note": "Follow-up for hypertension, blood pressure well controlled."}
+{"patient_id": "P002", "kind": "diagnosis", "date": "2024-08-01", "condition": "asthma"}
+{"patient_id": "P002", "kind": "visit_note", "date": "2026-02-10", "note": "Routine check-up, no issues raised."}
+{"patient_id": "P003", "kind": "visit_note", "date": "2026-03-03", "note": "Sports injury follow-up, healing well."}

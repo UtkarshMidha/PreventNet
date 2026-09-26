@@ -1,0 +1,130 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>PreventNet architecture</title>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap");
+  :root {
+    --bg: #101216; --card: #15181d; --line: #272d35;
+    --ink: #eceef2; --ink-2: #99a2ae; --ink-3: #6f7883;
+    --gp: #8279f8; --pharmacy: #f0913f; --lab: #2bbfae; --fed: #b985f0;
+    --edge: #e06c68; --arrow: #8b939d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: "Geist", ui-sans-serif, system-ui, sans-serif; }
+  .frame { width: 1400px; padding: 20px; }
+  .stage { position: relative; width: 1360px; height: 748px; background: var(--card);
+           border: 1px solid var(--line); border-radius: 18px; }
+  svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .box { position: absolute; border: 1.5px solid var(--line); border-radius: 12px;
+         background: #1a1e24; padding: 16px 18px; }
+  .box.dept { border-left-width: 5px; }
+  .box h3 { margin: 0 0 9px; font-size: 19px; font-weight: 600; color: var(--ink); letter-spacing: -.01em; }
+  .box .sub { font-size: 12.5px; color: var(--ink-3); font-weight: 500; margin: -6px 0 9px; }
+  .box p { margin: 0 0 5px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+  .path { font-family: "Geist Mono", ui-monospace, monospace; font-size: 12.5px; color: var(--ink-3); margin-top: 10px; }
+  .lbl { position: absolute; font-size: 13px; color: var(--ink-2); font-weight: 500; white-space: nowrap; }
+  .lbl.edge { color: var(--edge); font-size: 13px; }
+  .lbl.res { color: var(--fed); background: #15181d; padding: 0 12px; }
+  .pipe { font-size: 13.5px; line-height: 1.6; color: var(--ink); }
+  .pipe b { color: var(--lab); font-weight: 600; }
+  .recv { font-size: 13px; color: var(--ink-2); margin-top: 8px; line-height: 1.5; }
+  .fedbox { position: absolute; border: 1.5px solid #4b3a6b; background: #1d1830; border-radius: 10px;
+            padding: 13px 16px; text-align: center; }
+  .fedbox b { display: block; font-size: 16px; color: var(--fed); font-weight: 600; margin-bottom: 4px; }
+  .fedbox span { font-size: 12.5px; color: var(--ink-2); }
+  .tag { position: absolute; top: 16px; right: 20px; font-size: 11px; letter-spacing: .09em;
+         text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+</style>
+
+<div class="frame">
+<div class="stage">
+  <div class="tag">PreventNet · data isolation</div>
+
+  <svg class="wires">
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#8b939d"/>
+      </marker>
+      <marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#b985f0"/>
+      </marker>
+    </defs>
+
+    <!-- residuals: GP (label holder) to each other department, peer to peer -->
+    <path d="M 250 128 C 250 62, 452 62, 560 106" fill="none" stroke="#b985f0" stroke-width="1.8"
+          stroke-dasharray="6 5" marker-end="url(#p)"/>
+    <path d="M 250 128 C 250 36, 892 30, 1018 106" fill="none" stroke="#b985f0" stroke-width="1.8"
+          stroke-dasharray="6 5" marker-end="url(#p)"/>
+
+    <!-- the boundary -->
+    <line x1="30" y1="376" x2="1330" y2="376" stroke="#e06c68" stroke-width="1.6" stroke-dasharray="3 6"/>
+
+    <!-- disclosures down to the coordinator -->
+    <line x1="250" y1="336" x2="250" y2="470" stroke="#8b939d" stroke-width="1.8" marker-end="url(#a)"/>
+    <line x1="680" y1="336" x2="680" y2="470" stroke="#8b939d" stroke-width="1.8" marker-end="url(#a)"/>
+    <line x1="1110" y1="336" x2="1110" y2="470" stroke="#8b939d" stroke-width="1.8" marker-end="url(#a)"/>
+
+    <!-- coordinator to clinician -->
+    <line x1="680" y1="630" x2="680" y2="672" stroke="#8b939d" stroke-width="1.8" marker-end="url(#a)"/>
+  </svg>
+
+  <!-- departments -->
+  <div class="box dept" style="left:30px; top:128px; width:440px; height:200px; border-left-color:var(--gp)">
+    <h3>GP practice</h3>
+    <div class="sub">Health Diagnostics · holds the label</div>
+    <p>visit notes · diagnoses · referrals</p>
+    <p>Pima: pregnancies, blood pressure, skinfold,<br>BMI, family history, age <b style="color:var(--gp)">+ diabetes label</b></p>
+    <div class="path">preventnet/data/gp/</div>
+  </div>
+
+  <div class="box dept" style="left:490px; top:128px; width:380px; height:200px; border-left-color:var(--pharmacy)">
+    <h3>Pharmacy</h3>
+    <div class="sub">Prescription Logs</div>
+    <p>dispensing records · interaction flags</p>
+    <p>Pima: synthetic column,<br>blood-pressure medicine dispensed</p>
+    <div class="path">preventnet/data/pharmacy/</div>
+  </div>
+
+  <div class="box dept" style="left:890px; top:128px; width:440px; height:200px; border-left-color:var(--lab)">
+    <h3>Lab</h3>
+    <div class="sub">Lab Reports</div>
+    <p>eGFR and HbA1c results</p>
+    <p>Pima: glucose, insulin</p>
+    <div class="path">preventnet/data/lab/</div>
+  </div>
+
+  <div class="lbl res" style="left:400px; top:40px;">training residuals, GP to the other departments only</div>
+  <div class="lbl edge" style="right:30px; top:350px;">raw records and features never cross this line</div>
+
+  <div class="lbl" style="left:264px; top:392px;">yes/no &amp; bands</div>
+  <div class="lbl" style="left:694px; top:392px;">yes/no &amp; bands</div>
+  <div class="lbl" style="left:1124px; top:392px;">yes/no &amp; bands</div>
+  <div class="lbl" style="left:264px; top:414px; color:var(--ink-3)">+ refusals</div>
+  <div class="lbl" style="left:694px; top:414px; color:var(--ink-3)">+ refusals</div>
+  <div class="lbl" style="left:1124px; top:414px; color:var(--ink-3)">+ refusals</div>
+
+  <!-- coordinator -->
+  <div class="box" style="left:30px; top:470px; width:1300px; height:160px; border-left:5px solid var(--lab)">
+    <h3>Coordinator</h3>
+    <div style="display:flex; gap:24px; align-items:flex-start">
+      <div style="flex:1; min-width:0">
+        <div class="pipe">wire allowlist → disclosure ledger (L1, L2, …) → federated risk band →
+          reasoning (<b>Flower Endeavor</b>) → verifier → verdict</div>
+        <div class="recv">receives: short categorical answers, refusals, masked and summed model scores,
+          aggregate accuracy. Nothing else.<br>
+          never receives: records, free text, dates, drug names, per-department weights, the mask secret.</div>
+      </div>
+      <div class="fedbox" style="position:relative; width:290px; flex:none">
+        <b>federated model</b>
+        <span>conducts the rounds, sums masked scores</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- clinician -->
+  <div class="box" style="left:460px; top:672px; width:440px; text-align:center; padding:14px 18px">
+    <h3 style="margin-bottom:4px">Clinician</h3>
+    <p style="margin:0">approves the recommendation, or not</p>
+  </div>
+</div>
+</div>

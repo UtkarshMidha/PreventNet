@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PreventNet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="ui.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%235b4ee6%27/%3E%3Cpath d=%27M16 7l2.2 6.3L24.5 15l-6.3 2.2L16 23.5l-2.2-6.3L7.5 15l6.3-1.7z%27 fill=%27white%27/%3E%3C/svg%3E">
+<style>
+  .dev { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--warn); background: var(--warn-soft); border-radius: 6px; padding: 1px 6px; }
+  .nav a .dev { margin-left: 6px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); }
+  .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .chart-wrap { position: relative; overflow-x: auto; margin-top: 12px; }
+  .chart-wrap svg text { font-family: var(--font); font-size: 11.5px; fill: var(--ink-3); }
+  .tip { position: absolute; pointer-events: none; background: #15151c; color: #fff; border-radius: 10px; padding: 8px 12px; font-size: 12px; white-space: nowrap; box-shadow: var(--shadow); }
+  .qrow { display: grid; grid-template-columns: minmax(200px, 1.1fr) 1fr 1fr; gap: 18px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .qrow:last-child { border-bottom: 0; }
+  .qrow .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .colrow { display: grid; gap: 2px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .colrow:last-child { border-bottom: 0; }
+  .colrow .line { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+
+  /* today's patients */
+  .patients { display: grid; }
+  .prow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .prow:last-child { border-bottom: 0; }
+  .prow .grow { flex: 1; min-width: 0; }
+
+  /* running-on box */
+  .runbox { display: flex; align-items: center; gap: 14px; border: 1px solid var(--line-2); border-radius: 14px; padding: 14px 16px; background: linear-gradient(120deg, #f7f6ff, #fff); }
+  .runbox .cloud { position: relative; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--accent-2), var(--accent)); flex: none; }
+  .runbox .cloud::after { content: ""; position: absolute; inset: -4px; border-radius: 15px; border: 2px solid var(--accent-2); opacity: 0; animation: ring 2.4s ease-out infinite; }
+  @keyframes ring { 0% { opacity: .6; transform: scale(.9); } 100% { opacity: 0; transform: scale(1.25); } }
+  .runbox .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); margin-right: 6px; animation: blink 1.6s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: .3; } }
+  #fastRow input:checked { background: var(--accent); }
+
+  /* progress */
+  .pbar { height: 6px; border-radius: 999px; background: #efeff4; overflow: hidden; margin: -4px 0 14px; }
+  .pbar i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .6s ease; position: relative; }
+  .pbar.run i::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); animation: shine 1.2s linear infinite; }
+  @keyframes shine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  .step { display: flex; gap: 14px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); transition: opacity .4s; }
+  .step:last-child { border-bottom: 0; }
+  .step .tile { transition: background .35s, color .35s, border-color .35s, transform .35s; }
+  .step .text { transition: color .35s; }
+  .step.todo { opacity: .45; }
+  .step.todo .tile { background: transparent; border-style: dashed; color: var(--ink-3); }
+  .step.active .tile { background: var(--info-soft); color: var(--accent); border-color: transparent; box-shadow: 0 0 0 0 rgba(91,78,230,.35); animation: pulse 1.4s ease-out infinite; }
+  .step.done .tile { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+  .step.done .tile svg.i { animation: pop .35s ease-out; }
+  .step.active .text b { color: var(--accent); }
+  .step .meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); max-height: 0; overflow: hidden; transition: max-height .35s; }
+  .step .meta svg.i { width: 12px; height: 12px; color: var(--accent-2); }
+  .step .meta.show { max-height: 30px; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(91,78,230,.35); } 100% { box-shadow: 0 0 0 10px rgba(91,78,230,0); } }
+  @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+  .fade-in { animation: fadein .5s ease-out; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (max-width: 860px) { .qrow { grid-template-columns: 1fr; gap: 8px; } }
+</style>
+</head>
+<body>
+<div class="frame">
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-tile">P</div>
+      <div><div class="brand-name">PreventNet</div><div class="brand-sub">Preventive Care</div></div>
+    </div>
+    <div class="context"><span data-icon="fed"></span><div><div style="font-weight:500">Care Network</div><div class="small faint">3 Connected Sources</div></div></div>
+    <nav class="nav" aria-label="Workspace">
+      <div class="eyebrow">Workspace</div>
+      <a href="#overview" data-view="overview"><span data-icon="grid"></span>Overview</a>
+      <a href="#review" data-view="review"><span data-icon="clipboard"></span>Reviews<span class="count" id="navPending" hidden>1</span></a>
+      <a href="#insights" data-view="insights"><span data-icon="chart"></span>Insights<span class="dev" title="For developers. Shown for illustration, not for clinical use.">Dev</span></a>
+      <a href="#decisions" data-view="decisions"><span data-icon="badge"></span>Decisions<span class="count" id="navDecisions" hidden>0</span></a>
+    </nav>
+    <nav class="nav" aria-label="Data Sources" id="navDepts">
+      <div class="eyebrow">Data Sources</div>
+    </nav>
+    <div class="grow"></div>
+    <div class="usercard">
+      <div class="who"><div class="avatar">DR</div><div><div style="font-weight:600">Doctor</div><div class="small faint">Reviews &amp; Decisions</div></div></div>
+      <a class="btn btn-dark btn-block" href="#review"><span data-icon="sparkles"></span>New Review</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="title">
+        <h1 id="greeting">Hello, Doc!</h1>
+        <p id="subline">Preventive reviews across your care network.</p>
+      </div>
+      <span class="pill" id="statusPill"><span class="dot"></span><span id="statusText">Checking Sources…</span></span>
+      <a class="btn btn-dark" id="cta" href="#review"><span data-icon="sparkles"></span><span id="ctaText">New Review</span></a>
+    </header>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <section class="view" id="view-overview">
+        <div class="hero" id="hero">
+          <div class="orb"><span data-icon="sparkles"></span></div>
+          <div class="body">
+            <div class="live"><span class="tag idle" id="heroTag"><span class="dot"></span><span id="heroTagText">COORDINATOR AGENT · READY</span></span>
+              <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+            <div class="headline" id="heroHeadline">Getting today's list ready</div>
+            <div class="chips"><span>3 Sources Connected</span><span>Records Stay Private</span></div>
+          </div>
+          <div class="glass-row">
+            <div class="glass"><div class="k"><span data-icon="users"></span>Patients Today</div><div class="v" id="gPatients">–</div><div class="s" id="gPatientsSub">&nbsp;</div></div>
+            <div class="glass"><div class="k"><span data-icon="badge"></span>Approved</div><div class="v" id="gApproved">0</div><div class="s" id="gApprovedSub">&nbsp;</div></div>
+            <div class="glass"><div class="k"><span data-icon="clock"></span>Awaiting You</div><div class="v" id="gAwaiting">0</div><div class="s" id="gAwaitingSub">decisions pending</div></div>
+          </div>
+        </div>
+
+        <div class="grid-3" id="deptCards" style="margin-top:20px"></div>
+
+        <div class="grid-2" style="margin-top:20px;align-items:start">
+          <div class="card">
+            <div class="card-head"><div><h2>Today's Patients</h2><p id="todaySub">Preventive reviews due today</p></div></div>
+            <div class="patients" id="todayList"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h2>Agent Activity</h2><p id="activitySub">Nothing yet</p></div></div>
+            <div class="feed" id="activity"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REVIEWS -->
+      <section class="view" id="view-review" hidden>
+        <div class="grid-2" style="align-items:start">
+          <div class="card">
+            <div class="card-head"><div><h2>New Patient</h2><p>Pick a patient to review.</p></div></div>
+            <div style="display:grid;gap:18px">
+              <div class="field"><span class="eyebrow">Patient</span>
+                <div class="seg" id="patientSeg" role="radiogroup">
+                  <button type="button" class="on" data-p="P001">P001</button>
+                  <button type="button" data-p="P002">P002</button>
+                  <button type="button" data-p="P003">P003</button>
+                </div>
+              </div>
+              <div class="field"><span class="eyebrow">Running On</span>
+                <div class="runbox"><div class="cloud"><span data-icon="cloud"></span></div>
+                  <div><b>Flower SuperGrid</b><div class="small muted"><span class="live-dot"></span>Secure Federated Run</div></div></div>
+              </div>
+              <div style="display:grid;gap:10px">
+                <label class="switch" id="fastRow"><input type="checkbox" id="fast" checked><span><b>Fast Mode</b></span></label>
+                <label class="switch"><input type="checkbox" id="sabotage"><span>Simulate Compromised Prescription Logs</span></label>
+              </div>
+              <button class="btn btn-dark" id="startBtn" style="justify-self:start"><span data-icon="sparkles"></span><span id="startText">Start Review</span></button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h2>Agent Progress</h2><p id="progressSub">Start a review to watch the agents work.</p></div><span id="progressChip"></span></div>
+            <div class="pbar" id="pbar"><i></i></div>
+            <div id="steps"><div class="empty small">No review running.</div></div>
+          </div>
+        </div>
+        <div class="alert bad" id="reviewError" hidden style="margin-top:20px">
+          <span data-icon="alert"></span>
+          <div style="display:grid;gap:8px;flex:1;min-width:0"><b>The Review Could Not Finish</b><span id="errText"></span>
+            <details id="errDetails" hidden><summary>Technical Details</summary><pre class="log" id="errLog"></pre></details></div>
+        </div>
+        <div id="resultWrap" hidden style="margin-top:20px"><iframe class="result" id="viewer" title="Review Result"></iframe></div>
+      </section>
+
+      <!-- INSIGHTS (DEV) -->
+      <section class="view" id="view-insights" hidden>
+        <div class="card">
+          <div class="card-head">
+            <div><h2 style="display:flex;gap:8px;align-items:center">Insights <span class="dev">Dev</span></h2>
+              <p>How the shared diabetes risk model is doing. For developers; shown for illustration only.</p></div>
+            <button class="btn btn-dark" id="trainBtn"><span data-icon="refresh"></span>Update Model</button>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><span class="chip" id="flSource">Not Trained Yet</span>
+            <span class="small muted" id="flLockNote" hidden>Available again when the running review finishes.</span></div>
+        </div>
+
+        <div id="flEmpty" class="card empty"><span data-icon="chart"></span><b>No Model Yet</b><span>Click Update Model, or run a review.</span></div>
+
+        <div id="flBody" hidden style="display:grid;gap:20px">
+          <div class="grid-3" id="flKpis"></div>
+          <div class="card">
+            <div class="card-head"><div><h2>Model Quality Over Training</h2><p>The three sources improve the model together without sharing their data.</p></div>
+              <div class="legend" id="legend"></div></div>
+            <div class="chart-wrap" id="chartWrap"><svg id="chart" role="img" aria-label="Accuracy and AUC by training round"></svg><div class="tip" id="tip" hidden></div></div>
+            <details style="margin-top:14px"><summary>How To Read This Chart</summary>
+              <ul class="muted" style="margin:0;padding-left:18px;max-width:70ch">
+                <li><b>Blue, train accuracy:</b> share of the 615 training people classified correctly.</li>
+                <li><b>Orange, test accuracy:</b> the same on 153 people the model never saw.</li>
+                <li><b>Green, test AUC:</b> chance that someone who developed diabetes is ranked above someone who didn't (0.5 = coin flip, 1.0 = perfect).</li>
+                <li>Flat lines mean the model has finished learning.</li>
+              </ul></details>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h2>Data &amp; Questions</h2><p>What each source holds, and what the coordinator may ask.</p></div>
+            <div class="seg" id="dataSeg"><button type="button" class="on" data-tab="dataset">Dataset</button><button type="button" data-tab="questions">Questions</button></div>
+          </div>
+          <div id="tab-dataset">
+            <div class="note"><span data-icon="info"></span><span>The risk model learns from the public <b>Pima Indians Diabetes</b> dataset: 768 women aged 21 and over, 268 (34.9%) of whom developed diabetes within five years. Its columns are split across the three sources. The prescription column is simulated. Figures are totals each source computes itself.</span></div>
+            <div class="grid-3" id="datasetCards" style="margin-top:16px;align-items:start"></div>
+          </div>
+          <div id="tab-questions" hidden>
+            <div class="note"><span data-icon="info"></span><span>These come from each source's own patient records, not from the Pima dataset. Only the short answer is shared.</span></div>
+            <div id="questionList" style="margin-top:8px"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DECISIONS -->
+      <section class="view" id="view-decisions" hidden>
+        <div class="card">
+          <div class="card-head"><div><h2>Decisions</h2><p>Recommendations you approved or declined today.</p></div></div>
+          <div class="feed" id="decisionList"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="icons.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const SOURCES = [
+  { role: "gp", name: "Health Diagnostics", icon: "gp", holds: "Diagnoses, visit notes and referrals" },
+  { role: "pharmacy", name: "Prescription Logs", icon: "pharmacy", holds: "Dispensed medicines and interaction alerts" },
+  { role: "lab", name: "Lab Reports", icon: "lab", holds: "Kidney and blood-sugar results" },
+];
+const STATUS = {
+  not_reviewed: ["", "Not Reviewed"], awaiting: ["warn", "Awaiting Decision"], approved: ["ok", "Approved"],
+  declined: ["", "Declined"], conflict: ["bad", "Sources Disagree"], blocked: ["bad", "Needs Checking"],
+};
+const VERDICT = {
+  APPROVED_FOR_REVIEW: { text: "Ready For Your Decision", cls: "ok" },
+  ESCALATE_CONFLICT: { text: "Sources Disagree", cls: "warn" },
+  BLOCKED_UNVERIFIED: { text: "Needs Checking", cls: "bad" },
+};
+const STEP_TEXT = {
+  submitted: ["cloud", "Connecting to Flower SuperGrid"],
+  started: ["server", "Secure run started"],
+  installing: ["refresh", "Preparing the agents"],
+  coordinator_plan: ["sparkles", "Planning which questions to ask"],
+  facet_gp: ["gp", "Health Diagnostics is answering"],
+  facet_pharmacy: ["pharmacy", "Prescription Logs is answering"],
+  facet_lab: ["lab", "Lab Reports is answering"],
+  facets: ["users", "The sources are answering"],
+  ledger_from_local_sites: ["shield", "Sharing only the facts"],
+  federated_training: ["fed", "Estimating diabetes risk"],
+  coordinator_reason: ["sparkles", "Coordinator is writing its assessment"],
+  verifier: ["shield", "Double-checking every claim"],
+  done: ["badge", "Ready for your decision"],
+};
+const PLAN = ["submitted", "started", "installing", "coordinator_plan", "facet_gp", "facet_pharmacy", "facet_lab",
+              "federated_training", "coordinator_reason", "verifier", "done"];
+const SERIES = [
+  { key: "train_accuracy", label: "Train accuracy", color: "#2a78d6" },
+  { key: "test_accuracy", label: "Test accuracy", color: "#eb6834" },
+  { key: "test_auc", label: "Test AUC", color: "#1baf7a" },
+];
+
+let S = { sites: null, fl: null, latest: null, decisions: [], job: null, labels: null, today: null, patient: "P001" };
+let polling = null, stepsFor = null;
+
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+const L = (kind, key) => (S.labels && S.labels[kind] && S.labels[kind][key]) || humanize(key);
+const time = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+const plain = t => String(t ?? "").replace(/\s*\[(?:L\d+[,\s]*)+\]/g, "").trim();
+const avatarText = pid => pid.replace(/^P0*/, "P");
+const running = () => S.job?.status === "running";
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+/* ---------- routing ---------- */
+function route() {
+  let view = (location.hash || "#overview").slice(1);
+  if (!$("view-" + view)) view = "overview";
+  document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "view-" + view);
+  document.querySelectorAll(".nav a[data-view]").forEach(a => a.classList.toggle("active", a.dataset.view === view));
+  if (view === "insights") renderFl();
+}
+window.addEventListener("hashchange", route);
+
+/* ---------- shell & overview ---------- */
+function renderShell() {
+  const h = new Date().getHours();
+  $("greeting").textContent = `${h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"}, Doc!`;
+  const c = S.today?.counts;
+  if (c) {
+    const toReview = c.patients - c.reviewed;
+    $("subline").innerHTML = `You have <b>${plural(c.patients, "patient")}</b> today. ${c.reviewed} reviewed` +
+      (c.awaiting ? `, <b>${c.awaiting} waiting for your decision</b>.` : toReview ? `, ${toReview} still to review.` : ". All done for today.");
+    $("navPending").hidden = !c.awaiting; $("navPending").textContent = c.awaiting;
+    $("ctaText").textContent = running() ? "Review Running…" : c.awaiting ? `${c.awaiting} Awaiting You` : "New Review";
+  }
+  $("navDecisions").hidden = !S.decisions.length; $("navDecisions").textContent = S.decisions.length;
+
+  if (S.sites) {
+    const online = Object.values(S.sites.sites).filter(s => s.online).length;
+    $("statusPill").className = "pill " + (online === 3 && S.sites.aligned ? "ok" : "bad");
+    $("statusText").textContent = online === 3 ? "All Sources Online" : `${3 - online} Source Offline`;
+    $("navDepts").innerHTML = '<div class="eyebrow">Data Sources</div>' + SOURCES.map(d => {
+      const s = S.sites.sites[d.role];
+      return `<a href="${esc(s.url)}" target="_blank" rel="noopener">${icon(d.icon)}${d.name}<span class="dot ${s.online ? "on" : "off"}" title="${s.online ? "Online" : "Offline"}"></span></a>`;
+    }).join("");
+    $("deptCards").innerHTML = SOURCES.map(d => {
+      const s = S.sites.sites[d.role];
+      const shared = S.latest ? (S.latest.ledger || []).filter(i => i.source === d.role).length : null;
+      return `<div class="card dept">
+        <div class="row"><div class="dept-tile ${d.role}">${icon(d.icon)}</div>
+          <div style="flex:1"><h3>${d.name}</h3><div class="small muted">${d.holds}</div></div>
+          <span class="chip ${s.online ? "ok" : "bad"}"><span class="dot"></span>${s.online ? "Online" : "Offline"}</span></div>
+        <div class="foot"><span class="small faint">${shared === null ? "Records stay here" : `Shared ${plural(shared, "fact")} in the last review`}</span>
+          <a href="${esc(s.url)}" target="_blank" rel="noopener">Open ${icon("external")}</a></div>
+      </div>`;
+    }).join("");
+  }
+}
+
+function renderHero() {
+  const c = S.today?.counts, job = S.job;
+  let tag = "idle", tagText = "COORDINATOR AGENT · READY", headline = "Getting today's list ready";
+  if (running()) {
+    tag = ""; tagText = "COORDINATOR AGENT · WORKING";
+    const last = job.steps[job.steps.length - 1];
+    headline = `Reviewing ${job.patient_id}: ${(STEP_TEXT[last] || ["", "working"])[1].toLowerCase()}`;
+  } else if (c) {
+    const left = c.patients - c.reviewed;
+    if (c.awaiting) { tag = "wait"; tagText = "COORDINATOR AGENT · WAITING FOR YOU"; headline = `${plural(c.awaiting, "review")} ${c.awaiting === 1 ? "is" : "are"} waiting for your decision`; }
+    else if (c.conflicts) { tag = "wait"; tagText = "COORDINATOR AGENT · NEEDS ATTENTION"; headline = `${plural(c.conflicts, "review")} need${c.conflicts === 1 ? "s" : ""} checking before a decision`; }
+    else if (left) headline = `${plural(left, "patient")} still to review today`;
+    else headline = "All of today's patients are reviewed";
+  }
+  $("hero").classList.toggle("running", running());
+  $("heroTag").className = "tag " + tag;
+  $("heroTagText").textContent = tagText;
+  $("heroHeadline").textContent = headline;
+  if (c) {
+    $("gPatients").textContent = c.patients;
+    $("gPatientsSub").textContent = `${c.reviewed} reviewed`;
+    $("gApproved").textContent = c.approved;
+    $("gApprovedSub").textContent = c.declined ? `${c.declined} declined` : "so far today";
+    $("gAwaiting").textContent = c.awaiting;
+    $("gAwaitingSub").textContent = c.conflicts ? `${c.conflicts} need checking` : "decisions pending";
+  }
+}
+
+function renderToday() {
+  const t = S.today;
+  if (!t) return;
+  $("todaySub").textContent = `${t.counts.reviewed} of ${t.counts.patients} reviewed`;
+  $("todayList").innerHTML = t.patients.map(p => {
+    const [cls, label] = STATUS[p.status];
+    const onScreen = t.on_screen === p.patient_id;
+    return `<div class="prow"><div class="avatar">${esc(avatarText(p.patient_id))}</div>
+      <div class="grow"><div style="font-weight:600">Patient ${esc(p.patient_id)}</div>
+        <div class="small faint">${p.reviewed_at ? `Reviewed at ${time(p.reviewed_at)}` : "Preventive review due"}</div></div>
+      <span class="chip ${cls}">${cls ? '<span class="dot"></span>' : ""}${label}</span>
+      <button class="btn" data-open="${esc(p.patient_id)}">${onScreen ? "Open" : p.status === "not_reviewed" ? "Review" : "Review Again"}</button></div>`;
+  }).join("");
+}
+$("todayList").addEventListener("click", e => {
+  const b = e.target.closest("[data-open]");
+  if (!b) return;
+  S.patient = b.dataset.open;
+  location.hash = "#review";
+  syncForm();
+});
+
+function renderActivity() {
+  const l = S.latest;
+  if (!l) { $("activity").innerHTML = `<div class="empty small">Agent activity appears here after a review.</div>`; return; }
+  const v = VERDICT[l.verdict] || { text: l.verdict, cls: "" };
+  const items = [];
+  for (const d of SOURCES) {
+    const facts = (l.ledger || []).filter(i => i.source === d.role).length;
+    const declined = (l.refusals || []).filter(r => r.role === d.role).length;
+    const hacked = (l.sabotaged_roles || []).includes(d.role);
+    items.push([hacked ? "bad" : "", d.icon, `<b>${d.name}</b> shared ${plural(facts, "fact")}${hacked ? " (compromised for the demo)" : ""}`,
+      declined ? `Declined ${plural(declined, "question")} outside the review's purpose` : "Answered every allowed question"]);
+  }
+  if (l.fl_risk) items.push(["info", "fed", `<b>Risk model</b> estimated diabetes risk as <b>${esc(L("values", l.fl_risk.band))}</b>`, `${Math.round(l.fl_risk.probability * 100)}% chance`]);
+  items.push(["info", "sparkles", `<b>Coordinator agent</b> wrote its assessment`, "Flower Endeavor"]);
+  items.push([v.cls, "shield", `<b>Checks:</b> ${v.text.toLowerCase()}`, (l.conflicts || []).length ? plural(l.conflicts.length, "disagreement") + " found" : "No disagreements between sources"]);
+  if (l.decision) items.push([l.decision.action === "approved" ? "ok" : "", "badge", `<b>You ${l.decision.action}</b> the recommendation`, time(l.decision.decided_at)]);
+  $("activitySub").textContent = `Patient ${l.patient_id} · ${time(l.reviewed_at)}`;
+  $("activity").innerHTML = items.map(([cls, ic, text, meta]) => `<div class="item"><div class="tile ${cls}">${icon(ic)}</div>
+    <div class="text">${text}<div class="meta">${icon("sparkles")}${meta}</div></div></div>`).join("");
+}
+
+/* ---------- reviews ---------- */
+function syncForm() {
+  document.querySelectorAll("#patientSeg button").forEach(b => b.classList.toggle("on", b.dataset.p === S.patient));
+  $("startBtn").disabled = running();
+  $("startText").textContent = running() ? "Review Running…" : "Start Review";
+  $("trainBtn").disabled = running();
+  $("flLockNote").hidden = !running();
+}
+$("patientSeg").addEventListener("click", e => { if (e.target.dataset.p) { S.patient = e.target.dataset.p; syncForm(); } });
+
+function buildSteps(job) {
+  $("steps").innerHTML = PLAN.map(st => {
+    const [ic, text] = STEP_TEXT[st];
+    return `<div class="step todo" data-step="${st}"><div class="tile">${icon(ic)}</div>
+      <div class="text"><b style="font-weight:500">${text}</b><div class="meta"></div></div></div>`;
+  }).join("");
+  stepsFor = job.id;
+}
+
+function renderSteps() {
+  const job = S.job, l = S.latest;
+  if (!job) return;
+  if (stepsFor !== job.id) buildSteps(job);
+  const reached = new Set(job.steps);
+  if (job.status === "done") reached.add("done");
+  let lastIdx = -1;
+  PLAN.forEach((st, i) => { if (reached.has(st)) lastIdx = i; });
+  PLAN.forEach((st, i) => {
+    const el = document.querySelector(`.step[data-step="${st}"]`);
+    const [ic] = STEP_TEXT[st];
+    const state = job.status === "done" || i < lastIdx ? "done" : i === lastIdx && job.status === "running" ? "active"
+      : i === lastIdx ? "done" : "todo";
+    if (!el.classList.contains(state)) {
+      el.className = "step " + state;
+      el.querySelector(".tile").innerHTML = icon(state === "done" ? "check" : state === "active" ? "loader" : ic, state === "active" ? "spin" : "");
+    }
+    let meta = job.details?.[st] || "";
+    if (st === "done" && job.status === "done" && l && l.verdict !== "APPROVED_FOR_REVIEW") meta = (VERDICT[l.verdict] || {}).text || "";
+    const m = el.querySelector(".meta");
+    if (meta && m.dataset.text !== meta) { m.innerHTML = `${icon("sparkles")}${esc(meta)}`; m.dataset.text = meta; m.classList.add("show"); }
+  });
+  const pct = job.status === "done" ? 100 : Math.round(((lastIdx + (job.status === "running" ? 0.5 : 1)) / PLAN.length) * 100);
+  $("pbar").querySelector("i").style.width = Math.max(4, pct) + "%";
+  $("pbar").classList.toggle("run", job.status === "running");
+  $("progressSub").textContent = `Patient ${job.patient_id} · Flower SuperGrid`;
+  $("progressChip").innerHTML = job.status === "running" ? `<span class="chip info">${icon("loader", "spin")}Running</span>`
+    : job.status === "failed" ? `<span class="chip bad">Failed</span>` : `<span class="chip ok">${icon("check")}Done</span>`;
+}
+
+function friendlyError(msg) {
+  if (/Stopped waiting|timed out/i.test(msg)) return "Flower SuperGrid took too long to answer. Try again with Fast Mode on.";
+  if (/unreach|connect|login|auth|token|401|403/i.test(msg)) return "Couldn't reach Flower SuperGrid. Check the connection and your Flower login, then try again.";
+  if (/already running/.test(msg)) return "A review is already running. Wait for it to finish.";
+  if (/site failed/.test(msg)) return "One of the data sources didn't respond. Check that all three are running.";
+  return "Something went wrong while running the review. Try again with Fast Mode on.";
+}
+function showError(msg, log = []) {
+  $("reviewError").hidden = false;
+  $("errText").textContent = friendlyError(msg);
+  $("errDetails").hidden = !msg;
+  $("errLog").textContent = [msg, ...log].filter(Boolean).join("\n");
+}
+function showResult() {
+  $("resultWrap").hidden = false;
+  $("resultWrap").classList.add("fade-in");
+  $("viewer").src = "viewer.html?embed=1&t=" + Date.now();
+}
+
+$("startBtn").addEventListener("click", async () => {
+  $("reviewError").hidden = true;
+  $("resultWrap").hidden = true;
+  $("startBtn").disabled = true;
+  try {
+    const res = await api("api/review", { patient_id: S.patient, engine: "supergrid",
+      fast: $("fast").checked, sabotage: $("sabotage").checked });
+    S.job = res.job;
+    startPolling();
+  } catch (e) { showError(e.message); }
+  renderAll();
+});
+
+function startPolling() {
+  if (!polling) polling = setInterval(pollJob, 500);
+  pollJob();
+}
+async function pollJob() {
+  const { job } = await api("api/job");
+  S.job = job;
+  if (!job || job.status !== "running") {
+    clearInterval(polling); polling = null;
+    if (job?.status === "failed") showError(job.error, job.log);
+    if (job?.status === "done") { await refreshData(); showResult(); }
+  }
+  renderAll();
+}
+
+/* ---------- insights ---------- */
+function currentFl() {
+  const local = S.fl, remote = S.latest?.fl?.source === "supergrid" ? S.latest.fl : null;
+  if (local && remote) return S.latest.reviewed_at > (local.trained_at || "") ? remote : local;
+  return local || remote || null;
+}
+function renderFl() {
+  const fl = currentFl();
+  $("flEmpty").hidden = !!fl;
+  $("flBody").hidden = !fl;
+  if (!fl) return;
+  $("flSource").className = "chip info";
+  $("flSource").innerHTML = `${icon("fed")}Updated ${fl.trained_at ? "at " + time(fl.trained_at) : "during the last run"}`;
+  const kpi = (ic, label, value, sub, pct) => `<div class="card kpi"><div class="top"><span class="icircle">${icon(ic)}</span>${label}</div>
+    <div class="value">${value}</div><div class="small muted">${sub}</div>
+    ${pct == null ? "" : `<div class="bar"><i style="width:${pct * 100}%"></i></div>`}</div>`;
+  $("flKpis").innerHTML =
+    kpi("chart", "Ranking Quality (AUC)", fl.test_auc.toFixed(2), "0.5 is a coin flip, 1.0 is perfect", fl.test_auc) +
+    kpi("badge", "Accuracy", (fl.test_accuracy * 100).toFixed(0) + "%", `On ${fl.n_test} people it never saw`, fl.test_accuracy) +
+    kpi("users", "People Learned From", "768", "Across all three sources", null);
+  $("legend").innerHTML = SERIES.map(s => `<span><i style="background:${s.color}"></i>${s.label}</span>`).join("");
+  requestAnimationFrame(() => drawChart(fl.history));
+}
+
+function drawChart(history) {
+  const wrap = $("chartWrap");
+  if (!wrap.clientWidth) return;
+  const W = Math.max(560, wrap.clientWidth), H = 260, m = { l: 40, r: 150, t: 10, b: 28 };
+  const n = history.length, y0 = 0.4, y1 = 1.0;
+  const x = r => m.l + (r - 1) / Math.max(1, n - 1) * (W - m.l - m.r);
+  const y = v => m.t + (y1 - Math.max(y0, v)) / (y1 - y0) * (H - m.t - m.b);
+  let s = "";
+  for (let v = 0.4; v <= 1.0001; v += 0.1) {
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#ebebf1"/>`;
+    s += `<text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${v.toFixed(1)}</text>`;
+  }
+  for (const r of [1, Math.round(n / 2), n]) s += `<text x="${x(r)}" y="${H - 6}" text-anchor="middle">Round ${r}</text>`;
+  const labels = [];
+  for (const ser of SERIES) {
+    const pts = history.filter(p => p[ser.key] != null);
+    if (!pts.length) continue;
+    s += `<polyline fill="none" stroke="${ser.color}" stroke-width="2" stroke-linejoin="round" points="${pts.map(p => `${x(p.round)},${y(p[ser.key])}`).join(" ")}"/>`;
+    if (ser.key !== "train_accuracy") s += pts.map(p => `<circle cx="${x(p.round)}" cy="${y(p[ser.key])}" r="4" fill="${ser.color}" stroke="#fff" stroke-width="2"/>`).join("");
+    const last = pts[pts.length - 1];
+    labels.push({ y: y(last[ser.key]), text: `${ser.label} ${last[ser.key].toFixed(2)}` });
+  }
+  labels.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < labels.length; i++) labels[i].y = Math.max(labels[i].y, labels[i - 1].y + 15);
+  for (const lb of labels) s += `<text x="${W - m.r + 8}" y="${lb.y + 4}" style="fill:#15151c">${esc(lb.text)}</text>`;
+  s += `<line id="cross" y1="${m.t}" y2="${H - m.b}" stroke="#9898a7" visibility="hidden"/>`;
+  s += `<rect x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent" id="hit"/>`;
+  const svg = $("chart");
+  svg.setAttribute("width", W); svg.setAttribute("height", H); svg.innerHTML = s;
+  const tip = $("tip"), cross = svg.querySelector("#cross");
+  svg.querySelector("#hit").addEventListener("mousemove", ev => {
+    const bx = svg.getBoundingClientRect();
+    const r = Math.min(n, Math.max(1, Math.round((ev.clientX - bx.left - m.l) / (W - m.l - m.r) * (n - 1) + 1)));
+    const p = history[r - 1];
+    cross.setAttribute("x1", x(r)); cross.setAttribute("x2", x(r)); cross.setAttribute("visibility", "visible");
+    tip.innerHTML = `<b>Round ${r}</b><br>` + SERIES.filter(sr => p[sr.key] != null)
+      .map(sr => `<span style="color:${sr.color}">━</span> ${sr.label}: ${p[sr.key].toFixed(3)}`).join("<br>");
+    tip.hidden = false;
+    tip.style.left = Math.min(x(r) + 12, W - 190) + "px"; tip.style.top = "8px";
+  });
+  svg.querySelector("#hit").addEventListener("mouseleave", () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); });
+}
+
+$("trainBtn").addEventListener("click", async () => {
+  $("trainBtn").disabled = true;
+  $("flSource").className = "chip info"; $("flSource").innerHTML = `${icon("loader", "spin")}Updating the model across the sources…`;
+  try { S.fl = await api("api/fl/train", {}); }
+  catch (e) { $("flSource").className = "chip bad"; $("flSource").textContent = "Update failed: " + e.message; }
+  $("trainBtn").disabled = false;
+  renderFl();
+});
+
+$("dataSeg").addEventListener("click", e => {
+  const t = e.target.dataset.tab; if (!t) return;
+  document.querySelectorAll("#dataSeg button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  $("tab-dataset").hidden = t !== "dataset"; $("tab-questions").hidden = t !== "questions";
+});
+function renderDataset(sites) {
+  $("datasetCards").innerHTML = SOURCES.map(d => {
+    const s = sites.find(x => x.role === d.role);
+    if (!s) return "";
+    const rows = s.columns.map(c => `<div class="colrow"><div class="line"><b>${esc(c.label)}</b><span class="num">${c.mean}</span></div>
+      <div class="line small muted"><span>${esc(c.description)}</span><span class="num">${c.min}–${c.max}</span></div>
+      ${c.missing_recorded_as_0 ? `<span class="small faint">${c.missing_recorded_as_0} not measured</span>` : ""}</div>`).join("");
+    const label = s.label ? `<div class="colrow"><div class="line"><b>${esc(s.label.name)}</b><span class="chip info">Outcome</span></div>
+      <span class="small muted">${s.label.positives} of ${s.rows} people (${(s.label.prevalence * 100).toFixed(1)}%). Only Health Diagnostics holds this.</span></div>` : "";
+    return `<div class="card dept"><div class="row"><div class="dept-tile ${d.role}">${icon(d.icon)}</div>
+      <div><h3>${d.name}</h3><div class="small muted">${s.rows} people · average, range below</div></div></div>
+      <div>${rows}${label}</div></div>`;
+  }).join("");
+}
+function renderQuestions(cat) {
+  const sourceName = r => (SOURCES.find(d => d.role === r) || { name: L("roles", r) }).name;
+  const rows = cat.questions.map(q => {
+    const refused = q.purpose === "marketing";
+    return `<div class="qrow"><div><b>${esc(q.label)}</b><div class="small muted">${esc(q.text)}</div>
+      <div class="chips"><span class="chip">${esc(sourceName(q.role))}</span><span class="chip ${refused ? "bad" : "info"}">${esc(L("purposes", q.purpose))}</span>${refused ? `<span class="chip bad">${icon("lock")}Always Declined</span>` : ""}</div></div>
+      <div><div class="eyebrow">Comes From</div><div class="small">${esc(q.derived_from.replace(/\bGP\b/g, "Health Diagnostics").replace(/\bPharmacy\b/g, "Prescription Logs"))}</div></div>
+      <div><div class="eyebrow">Why It Matters</div><div class="small">${esc(q.why)}</div></div></div>`;
+  });
+  const f = cat.fl_fact;
+  rows.push(`<div class="qrow"><div><b>${esc(f.label)}</b><div class="small muted">Low, moderate or high</div>
+    <div class="chips"><span class="chip">Risk Model</span><span class="chip info">${esc(L("purposes", f.purpose))}</span></div></div>
+    <div><div class="eyebrow">Comes From</div><div class="small">A model the three sources train together, without sharing their data</div></div>
+    <div><div class="eyebrow">Why It Matters</div><div class="small">${esc(f.why)}</div></div></div>`);
+  $("questionList").innerHTML = rows.join("");
+}
+
+/* ---------- decisions ---------- */
+function renderDecisions() {
+  $("decisionList").innerHTML = S.decisions.length ? S.decisions.map(d => {
+    const ok = d.action === "approved";
+    return `<div class="item"><div class="tile ${ok ? "ok" : ""}">${icon(ok ? "check" : "x")}</div>
+    <div class="text"><b>Patient ${esc(d.patient_id)}</b> · <span class="chip ${ok ? "ok" : ""}">${ok ? "Approved" : "Declined"}</span>
+    <div class="small muted" style="margin-top:4px">${esc(plain(d.recommendation))}</div>
+    <div class="meta">${icon("clock")}${time(d.decided_at)}</div></div></div>`;
+  }).join("")
+    : `<div class="empty">${icon("badge")}<b>No Decisions Yet</b><span>Approved and declined recommendations will be listed here.</span></div>`;
+}
+
+/* ---------- boot ---------- */
+function renderAll() {
+  renderShell(); renderHero(); renderToday(); renderActivity(); renderSteps(); syncForm(); renderDecisions();
+  if (!$("view-insights").hidden) renderFl();
+}
+async function loadSites() {
+  try { S.sites = await api("api/sites"); } catch (e) { S.sites = null; $("statusText").textContent = "Coordinator Unreachable"; }
+  renderShell();
+}
+async function refreshData() {
+  const [today, audit, fl, latest] = await Promise.all([
+    api("api/today"), api("api/audit"), api("api/fl"), api("latest.json").catch(() => null)]);
+  S.today = today; S.decisions = audit.decisions; S.fl = fl.fl; S.latest = latest;
+}
+
+window.addEventListener("message", async ev => {
+  if (ev.source !== $("viewer").contentWindow) return;
+  if (ev.data?.type === "height") $("viewer").style.height = ev.data.h + "px";
+  if (ev.data?.type === "decided") { await refreshData(); renderAll(); }
+});
+window.addEventListener("resize", () => { if (!$("view-insights").hidden) renderFl(); });
+
+(async function boot() {
+  fillIcons();
+  route();
+  const [cat, ds] = await Promise.all([api("api/catalog"), api("api/dataset").catch(() => null)]);
+  S.labels = cat.labels;
+  renderQuestions(cat);
+  if (ds) renderDataset(ds.sites);
+  await Promise.all([loadSites(), refreshData(), api("api/job").then(d => { S.job = d.job; }).catch(() => {})]);
+  if (S.latest) showResult();
+  if (running()) startPolling();
+  renderAll();
+  setInterval(loadSites, 5000);
+})();
+</script>
+</body>
+</html>
